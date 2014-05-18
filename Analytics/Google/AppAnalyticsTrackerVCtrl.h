@@ -1,6 +1,6 @@
 //
 //  AppAnalyticsTrackerVCtrl.h
-//  DBExample
+//  AppIOS
 //
 //  Copyright (c) 2014 Fitamatic All rights reserved.
 //
