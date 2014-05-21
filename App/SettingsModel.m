@@ -210,6 +210,42 @@ __strong static NSDictionary *brandDic;
 	return [prefs objectForKey:@"SessionID"];
 }
 
++(void)setCountry:(NSString*)country
+{
+    prefs = [NSUserDefaults standardUserDefaults];
+	[prefs setObject:country forKey:@"Country"];
+}
+
++(NSString*)getCountry
+{
+    prefs = [NSUserDefaults standardUserDefaults];
+	return [prefs objectForKey:@"Country"];
+}
+
++(void)setTotalUserContacts:(NSNumber*)totalUserContacts
+{
+	prefs = [NSUserDefaults standardUserDefaults];
+	[prefs setObject:totalUserContacts forKey:@"TotalUserContacts"];
+}
+
++(NSNumber*)getTotalUserContacts
+{
+	prefs = [NSUserDefaults standardUserDefaults];
+	return [prefs objectForKey:@"TotalUserContacts"];
+}
+
++(void)setProcessingContacts:(BOOL)processingContacts{
+	prefs = [NSUserDefaults standardUserDefaults];
+	[prefs setBool:processingContacts forKey:@"ProcessingContacts"];
+}
+
++(BOOL)getProcessingContacts
+{
+	[[NSUserDefaults standardUserDefaults] synchronize];
+	prefs = [NSUserDefaults standardUserDefaults];
+	return [prefs boolForKey:@"ProcessingContacts"];
+}
+
 +(void)setUserTopic
 {
     int timestamp = [[NSDate date] timeIntervalSince1970];
@@ -248,6 +284,36 @@ __strong static NSDictionary *brandDic;
         versionBuild = [NSString stringWithFormat: @"%@(%@)", versionBuild, build];
     }
     return versionBuild;
+}
+
+//Used for Performance measuring
++(void)setStartDateTimeStamp:(NSString*)startDateTime forIndex:(int)index
+{
+    prefs = [NSUserDefaults standardUserDefaults];
+    NSString *startKey = [NSString stringWithFormat:@"StartDateTime%d",index];
+    [prefs setObject:startDateTime forKey:startKey];
+}
+
++(void)setFinishDateTimeStamp:(NSString*)finishDateTime forIndex:(int)index
+{
+    prefs = [NSUserDefaults standardUserDefaults];
+    NSString *finishKey = [NSString stringWithFormat:@"FinishDateTime%d",index];
+	[prefs setObject:finishDateTime forKey:finishKey];
+}
+
++(NSTimeInterval)getStartToFinishTimeForIndex:(int)index
+{
+    prefs = [NSUserDefaults standardUserDefaults];
+    NSString *startKey = [NSString stringWithFormat:@"StartDateTime%d",index];
+    NSString *finishKey = [NSString stringWithFormat:@"FinishDateTime%d",index];
+    NSString *startDateStr = [prefs objectForKey:startKey];
+    NSString *finishDateStr = [prefs objectForKey:finishKey];
+    AppDateFormatter *dateFormatter = [[AppDateFormatter alloc] init];
+    dateFormatter.dateFormat = @"yyyy-MM-dd HH:mm:ss.SSS";
+    NSDate *startDate = [dateFormatter dateFromString:startDateStr];
+    NSDate *finishDate = [dateFormatter dateFromString:finishDateStr];
+    NSTimeInterval secondsBetween = [finishDate timeIntervalSinceDate:startDate];
+    return secondsBetween;
 }
 
 @end

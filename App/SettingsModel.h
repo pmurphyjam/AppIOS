@@ -40,9 +40,19 @@
 +(void)setSessionID:(NSString*)sessionID;
 +(NSString*)getSessionID;
 +(void)setUserTopic;
++(void)setCountry:(NSString*)country;
++(NSString*)getCountry;
++(void)setTotalUserContacts:(NSNumber*)totalUserContacts;
++(NSNumber*)getTotalUserContacts;
++(void)setProcessingContacts:(BOOL)processingContacts;
++(BOOL)getProcessingContacts;
 +(NSString*)getUserTopic;
 +(NSString*)getAppVersion;
 +(NSString*)getBuildValue;
 +(NSString*)getBuildVersion;
+//Used for Performance measuring
++(void)setStartDateTimeStamp:(NSString*)startDateTime forIndex:(int)index;
++(void)setFinishDateTimeStamp:(NSString*)finishDateTime forIndex:(int)index;
++(NSTimeInterval)getStartToFinishTimeForIndex:(int)index;
 
 @end
