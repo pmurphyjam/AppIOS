@@ -260,7 +260,7 @@
     if( statusCode == 200 )
     {
         NDLog(@"AppConnection : didReceiveResponse : Connection = %@",connectionName);
-        NSUInteger contentSize = [httpResponse expectedContentLength] > 0 ? [httpResponse expectedContentLength] : 0;
+        NSUInteger contentSize = (int)[httpResponse expectedContentLength] > 0 ? (int)[httpResponse expectedContentLength] : 0;
 		data = [[NSMutableData alloc] initWithCapacity:contentSize];
     }
     else

@@ -460,7 +460,7 @@
     NSDictionary *fileAttributes = [[NSFileManager defaultManager] attributesOfItemAtPath:databasePath error:&attributesError];
     if( attributesError == nil )
     {
-        fileSize = [fileAttributes fileSize];
+        fileSize = (int)[fileAttributes fileSize];
     }
     return fileSize;
 }
@@ -511,13 +511,13 @@
 				if ([parameter.parameterType intValue]== GET_LAST_INSERTED_IDENTITY)
                 {
 					NDLog(@"DA :  SetParameterInt %llu", sqlite3_last_insert_rowid(sqlite3dbConn));
-	                sqlite3_bind_int(ps, i+1, sqlite3_last_insert_rowid(sqlite3dbConn));
+	                sqlite3_bind_int(ps, i+1, (int)sqlite3_last_insert_rowid(sqlite3dbConn));
                 }
 				else if ([parameter.parameterType intValue] == GET_AND_SAVE_LAST_INSERTED_IDENTITY)
                 {
 					NDLog(@"DA :  SetParameterInt %llu", sqlite3_last_insert_rowid(sqlite3dbConn));
-                    sqlite3_bind_int(ps, i+1, sqlite3_last_insert_rowid(sqlite3dbConn));
-                    lastInsertedIdentity = sqlite3_last_insert_rowid(sqlite3dbConn);
+                    sqlite3_bind_int(ps, i+1, (int)sqlite3_last_insert_rowid(sqlite3dbConn));
+                    lastInsertedIdentity = (int)sqlite3_last_insert_rowid(sqlite3dbConn);
                 }
                 else if ([parameter.parameterType intValue] == RETRIEVE_SAVED_IDENTITY)
                 {
