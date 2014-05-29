@@ -138,6 +138,15 @@ __strong static AppDateFormatter *dateFormatter = nil;
 	return datetime;
 }
 
++(NSString *) getBirthDatefromDate:(NSDate*)date
+{
+    AppDateFormatter *dateFormatterInst = [[AppDateFormatter alloc] init];
+    [dateFormatterInst setDateStyle:NSDateFormatterMediumStyle];
+    [dateFormatter setTimeStyle:NSDateFormatterNoStyle];
+	NSString *datetime = [dateFormatterInst stringFromDate:date];
+	return datetime;
+}
+
 +(NSString*) getMidNightForDate:(NSDate*)date
 {
     NSCalendar *calendar = [[NSCalendar alloc] initWithCalendarIdentifier:NSGregorianCalendar];

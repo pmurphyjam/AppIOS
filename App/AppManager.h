@@ -34,6 +34,7 @@
 +(void)currentMemoryConsumption:(NSString*)executionPoint;
 +(void)saveExceptionData:(NSDictionary*)crashDic;
 +(NSString *)getSectionHeaderfromDate:(NSDate*)date;
++(NSString *)getBirthDatefromDate:(NSDate*)date;
 +(NSString*)getMidNightForDate:(NSDate*)date;
 +(NSString *)getSomeDSfromDate:(NSDate*)date;
 +(BOOL)DoesFileExistWithName:(NSString*)fileName;
