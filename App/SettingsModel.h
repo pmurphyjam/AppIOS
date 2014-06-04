@@ -46,6 +46,12 @@
 +(NSNumber*)getTotalUserContacts;
 +(void)setProcessingContacts:(BOOL)processingContacts;
 +(BOOL)getProcessingContacts;
++(void)setTotalCalendarEvents:(NSNumber*)totalCalendarEvents;
++(NSNumber*)getTotalCalendarEvents;
++(void)setCalendarAuthorization:(BOOL)calendarAuthorization;
++(BOOL)getCalendarAuthorization;
++(void)setProcessingCalendarEvents:(BOOL)processingCalendar;
++(BOOL)getProcessingCalendarEvents;
 +(NSString*)getUserTopic;
 +(NSString*)getAppVersion;
 +(NSString*)getBuildValue;

@@ -246,6 +246,44 @@ __strong static NSDictionary *brandDic;
 	return [prefs boolForKey:@"ProcessingContacts"];
 }
 
++(void)setTotalCalendarEvents:(NSNumber*)totalCalendarEvents
+{
+	prefs = [NSUserDefaults standardUserDefaults];
+	[prefs setObject:totalCalendarEvents forKey:@"TotalCalendarEvents"];
+}
+
++(NSNumber*)getTotalCalendarEvents
+{
+	prefs = [NSUserDefaults standardUserDefaults];
+	return [prefs objectForKey:@"TotalCalendarEvents"];
+}
+
++(void)setCalendarAuthorization:(BOOL)calendarAuthorization
+{
+	prefs = [NSUserDefaults standardUserDefaults];
+	[prefs setBool:calendarAuthorization forKey:@"CalendarAuthorization"];
+}
+
++(BOOL)getCalendarAuthorization
+{
+	[[NSUserDefaults standardUserDefaults] synchronize];
+	prefs = [NSUserDefaults standardUserDefaults];
+	return [prefs boolForKey:@"CalendarAuthorization"];
+}
+
++(void)setProcessingCalendarEvents:(BOOL)processingCalendar
+{
+	prefs = [NSUserDefaults standardUserDefaults];
+	[prefs setBool:processingCalendar forKey:@"ProcessingCalendar"];
+}
+
++(BOOL)getProcessingCalendarEvents
+{
+	[[NSUserDefaults standardUserDefaults] synchronize];
+	prefs = [NSUserDefaults standardUserDefaults];
+	return [prefs boolForKey:@"ProcessingCalendar"];
+}
+
 +(void)setUserTopic
 {
     int timestamp = [[NSDate date] timeIntervalSince1970];

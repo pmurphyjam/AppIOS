@@ -147,6 +147,37 @@ __strong static AppDateFormatter *dateFormatter = nil;
 	return datetime;
 }
 
++(NSString *) getMediumDatefromDate:(NSDate*)date
+{
+    AppDateFormatter *dateFormatterInst = [[AppDateFormatter alloc] init];
+    [dateFormatterInst setDateStyle:NSDateFormatterMediumStyle];
+    [dateFormatterInst setTimeStyle:NSDateFormatterNoStyle];
+	NSString *datetime = [dateFormatterInst stringFromDate:date];
+	return datetime;
+}
+
++(NSDate *) getMediumDatefromString:(NSString*)dateStr
+{
+    AppDateFormatter *dateFormatterInst = [[AppDateFormatter alloc] init];
+    [dateFormatterInst setDateStyle:NSDateFormatterMediumStyle];
+    [dateFormatterInst setTimeStyle:NSDateFormatterMediumStyle];
+	NSDate *datetime = [dateFormatterInst dateFromString:dateStr];
+	return datetime;
+}
+
++(NSString *) getMediumDateWithDayOfWeekfromDate:(NSDate*)date
+{
+    AppDateFormatter *dateFormatterInst = [[AppDateFormatter alloc] init];
+    [dateFormatterInst setDateStyle:NSDateFormatterMediumStyle];
+    [dateFormatterInst setTimeStyle:NSDateFormatterNoStyle];
+	NSString *datetime = [dateFormatterInst stringFromDate:date];
+    AppDateFormatter *dayOfWeekFormatterInst = [[AppDateFormatter alloc] init];
+    [dayOfWeekFormatterInst setDateFormat:@"EEE"];
+    NSString *dayOfWeek = [dayOfWeekFormatterInst stringFromDate:date];
+    datetime = [datetime stringByAppendingFormat:@":%@",dayOfWeek];
+	return datetime;
+}
+
 +(NSString*) getMidNightForDate:(NSDate*)date
 {
     NSCalendar *calendar = [[NSCalendar alloc] initWithCalendarIdentifier:NSGregorianCalendar];

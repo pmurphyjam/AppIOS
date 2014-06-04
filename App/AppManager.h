@@ -35,6 +35,9 @@
 +(void)saveExceptionData:(NSDictionary*)crashDic;
 +(NSString *)getSectionHeaderfromDate:(NSDate*)date;
 +(NSString *)getBirthDatefromDate:(NSDate*)date;
++(NSString *) getMediumDateWithDayOfWeekfromDate:(NSDate*)date;
++(NSString *) getMediumDatefromDate:(NSDate*)date;
++(NSDate *) getMediumDatefromString:(NSString*)dateStr;
 +(NSString*)getMidNightForDate:(NSDate*)date;
 +(NSString *)getSomeDSfromDate:(NSDate*)date;
 +(BOOL)DoesFileExistWithName:(NSString*)fileName;
