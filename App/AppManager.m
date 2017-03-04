@@ -209,26 +209,6 @@ __strong static AppDateFormatter *dateFormatter = nil;
 	return utcDate;
 }
 
-+(NSString*)PathForFileWithName:(NSString*)fileName
-{
-    NSArray *paths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);
-	NSString *documentsDirectory = [paths objectAtIndex:0];
-	NSString *pathForFile = [documentsDirectory stringByAppendingPathComponent:fileName];
-    return pathForFile;
-}
-
-+(BOOL)DoesFileExistWithName:(NSString*)fileName
-{
-    BOOL status = YES;
-    NSArray *paths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);
-	NSString *documentsDirectory = [paths objectAtIndex:0];
-    NSFileManager *fileManager = [NSFileManager defaultManager];
-	NSString *pathForFile = [documentsDirectory stringByAppendingPathComponent:fileName];
-    if(![fileManager fileExistsAtPath:pathForFile])
-        status = NO;
-    return status;
-}
-
 +(NSDate*)dateForUTCDateString:(NSString*)dateString
 {
     AppDateFormatter *dateFormatterUTC = [[AppDateFormatter alloc] init];
@@ -328,7 +308,7 @@ __strong static AppDateFormatter *dateFormatter = nil;
                           vm_stat.wire_count) * pagesize;
     natural_t mem_free = vm_stat.free_count * pagesize;
 	
-	[AppDebugLog writeDebugData:[NSString stringWithFormat:@"Memory : %@ Cons:Free:Used:Total: %0.2f : %0.2f : %0.2f : %0.2f MBs",executionPoint,info.resident_size/(1024.0*1024.0),mem_free/(1024.0*1024.0),mem_used/(1024.0*1024.0),info.virtual_size/(1024.0*1024.0)]];
+	[[AppDebugLog appDebug] writeDebugData:[NSString stringWithFormat:@"Memory : %@ Cons:Free:Used:Total: %0.2f : %0.2f : %0.2f : %0.2f MBs",executionPoint,info.resident_size/(1024.0*1024.0),mem_free/(1024.0*1024.0),mem_used/(1024.0*1024.0),info.virtual_size/(1024.0*1024.0)]];
 }
 
 +(NSDictionary*)crashDataExistsSQL
@@ -458,6 +438,108 @@ __strong static AppDateFormatter *dateFormatter = nil;
     NSLog(@"NSException : CrashInfo : \n%@",[crashDic objectForKey:@"CrashInfo"]);
     NSLog(@"NSException : StackTrace : \n%@",[crashDic objectForKey:@"StackTrace"]);
     [self insertCrashData:crashDic];
+}
+
++(NSString *)humanShortString:(NSDate*)date
+{
+    NSCalendar *cal = [NSCalendar currentCalendar];
+    NSCalendarUnit units = NSEraCalendarUnit|NSYearCalendarUnit|NSMonthCalendarUnit|NSDayCalendarUnit;
+    NSDateComponents *todayCal = [[NSCalendar currentCalendar] components:units fromDate:[NSDate date]];
+    NSDateComponents *otherDateCal = [[NSCalendar currentCalendar] components:units fromDate:date];
+    NSDateFormatter *timeFormatter = [[NSDateFormatter alloc] init];
+    [timeFormatter setDateFormat:@"h:mm a"];
+    NSDateFormatter *dateFormatter = [[NSDateFormatter alloc] init];
+    [dateFormatter setDateFormat:@"M/d/yy"];
+    NSDate *today = [cal dateFromComponents:todayCal];
+    NSDate *otherDate = [cal dateFromComponents:otherDateCal];
+    
+    if ([today isEqualToDate:otherDate])
+    {
+        return [timeFormatter stringFromDate:date];
+    }
+    else
+    {
+        return [dateFormatter stringFromDate:date];
+    }
+}
+
++(NSString*)PathForFileWithName:(NSString*)fileName
+{
+    NSArray *paths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);
+    NSString *documentsDirectory = [paths objectAtIndex:0];
+    NSString *pathForFile = [documentsDirectory stringByAppendingPathComponent:fileName];
+    NSURL *url = [NSURL fileURLWithPath:documentsDirectory];
+    NSError *error = nil;
+    //Adding this so the Documents directory is not backup to iCloud
+    BOOL success = [url setResourceValue:[NSNumber numberWithBool:YES]
+                                  forKey: NSURLIsExcludedFromBackupKey error: &error];
+    if(success)
+        NDLog(@"AppManager : PathForFileWithName : Documents directory Excluded From Backup SUCCESS");
+    else
+        NDLog(@"AppManager : PathForFileWithName : Documents directory Excluded From Backup FAILURE");
+    
+    return pathForFile;
+}
+
++(BOOL)DoesFileExistWithName:(NSString*)fileName
+{
+    BOOL status = YES;
+    NSArray *paths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);
+    NSString *documentsDirectory = [paths objectAtIndex:0];
+    NSFileManager *fileManager = [NSFileManager defaultManager];
+    NSString *pathForFile = [documentsDirectory stringByAppendingPathComponent:fileName];
+    if(![fileManager fileExistsAtPath:pathForFile])
+        status = NO;
+    return status;
+}
+
++(BOOL)DoesLibraryFileExistWithName:(NSString*)fileName
+{
+    BOOL status = YES;
+    NSArray *paths = NSSearchPathForDirectoriesInDomains(NSApplicationSupportDirectory, NSUserDomainMask, YES);
+    NSString *documentsDirectory = [paths objectAtIndex:0];
+    NSFileManager *fileManager = [NSFileManager defaultManager];
+    NSString *fileNamePath = [NSString stringWithFormat:@"/DocSpera/%@",fileName];
+    NSString *pathForFile = [documentsDirectory stringByAppendingPathComponent:fileNamePath];
+    if(![fileManager fileExistsAtPath:pathForFile])
+        status = NO;
+    return status;
+}
+
++(NSString*)ReturnPathForLibraryFileWithName:(NSString*)fileName
+{
+    NSArray *paths = NSSearchPathForDirectoriesInDomains(NSApplicationSupportDirectory, NSUserDomainMask, YES);
+    NSString *documentsDirectory = [paths objectAtIndex:0];
+    NSString *fileNamePath = [NSString stringWithFormat:@"/DocSpera/%@",fileName];
+    NSString *pathForFile = [documentsDirectory stringByAppendingPathComponent:fileNamePath];
+    return pathForFile;
+}
+
++(BOOL)DeleteLibraryFileWithName:(NSString*)fileName
+{
+    BOOL status = YES;
+    NSError *error;
+    NSArray *paths = NSSearchPathForDirectoriesInDomains(NSApplicationSupportDirectory, NSUserDomainMask, YES);
+    NSString *documentsDirectory = [paths objectAtIndex:0];
+    NSFileManager *fileManager = [NSFileManager defaultManager];
+    NSString *fileNamePath = [NSString stringWithFormat:@"/DocSpera/%@",fileName];
+    NSString *pathForFile = [documentsDirectory stringByAppendingPathComponent:fileNamePath];
+    if ([fileManager removeItemAtPath:pathForFile error:&error] != YES)
+        status = NO;
+    return status;
+}
+
++(BOOL)DeleteFileWithName:(NSString*)fileName
+{
+    BOOL status = YES;
+    NSError *error;
+    NSArray *paths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);
+    NSString *documentsDirectory = [paths objectAtIndex:0];
+    NSFileManager *fileManager = [NSFileManager defaultManager];
+    NSString *pathForFile = [documentsDirectory stringByAppendingPathComponent:fileName];
+    if ([fileManager removeItemAtPath:pathForFile error:&error] != YES)
+        status = NO;
+    return status;
 }
 
 @end

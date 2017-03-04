@@ -75,9 +75,9 @@
 -(void) moveDBtoDocumentDirectory:(NSString*)dbFile
 {
     NSError *error;
-	NSFileManager *fileManager = [NSFileManager defaultManager];
+    NSFileManager *fileManager = [NSFileManager defaultManager];
     NSArray *paths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);
-	NSString *documentsDirectory = [paths objectAtIndex:0];
+    NSString *documentsDirectory = [paths objectAtIndex:0];
     NSString *writableDBPath = [documentsDirectory stringByAppendingPathComponent:dbFile];
     NSString *defaultDBPath = [[[NSBundle mainBundle] resourcePath] stringByAppendingPathComponent:dbFile];
     
@@ -86,20 +86,20 @@
         bool success = [fileManager copyItemAtPath:defaultDBPath toPath:writableDBPath error:&error];
         if (!success )
         {
-            NSLog(@"DA : moveDBtoDocumentDirectory : FAILED : file = %@", writableDBPath);
-            [AppDebugLog writeDebugData:[NSString stringWithFormat:@"DA : moveDBtoDocumentDirectory: DB Copy FAILURE, %@", [error description]]];
+            NELog(@"DA : moveDBtoDocumentDirectory : FAILED : file = %@", writableDBPath);
+            [[AppDebugLog appDebug] writeDebugData:[NSString stringWithFormat:@"DA : moveDBtoDocumentDirectory: DB Copy FAILURE, %@", [error description]]];
         }
         else
-            [AppDebugLog writeDebugData:[NSString stringWithFormat:@"DA : moveDBtoDocumentDirectory: DB Copy SUCCESS, %@", [error description]]];
+            [[AppDebugLog appDebug] writeDebugData:[NSString stringWithFormat:@"DA : moveDBtoDocumentDirectory: DB Copy SUCCESS, %@", [error description]]];
     }
 }
 
 -(void) copyDBtoDocumentDirectory:(NSString*)copyDBFile toDB:(NSString*)toDBFile
 {
     NSError *error;
-	NSFileManager *fileManager = [NSFileManager defaultManager];
+    NSFileManager *fileManager = [NSFileManager defaultManager];
     NSArray *paths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);
-	NSString *documentsDirectory = [paths objectAtIndex:0];
+    NSString *documentsDirectory = [paths objectAtIndex:0];
     NSString *copyDBPath = [documentsDirectory stringByAppendingPathComponent:copyDBFile];
     NSString *toDBPath = [documentsDirectory stringByAppendingPathComponent:toDBFile];
     
@@ -108,20 +108,20 @@
         bool success = [fileManager copyItemAtPath:copyDBPath toPath:toDBPath error:&error];
         if (!success )
         {
-            NSLog(@"DA : copyDBtoDocumentDirectory : FAILED : file = %@", toDBPath);
-            [AppDebugLog writeDebugData:[NSString stringWithFormat:@"DA : copyDBtoDocumentDirectory: DB Copy FAILURE, %@", [error description]]];
+            NELog(@"DA : copyDBtoDocumentDirectory : FAILED : file = %@", toDBPath);
+            [[AppDebugLog appDebug] writeDebugData:[NSString stringWithFormat:@"DA : copyDBtoDocumentDirectory: DB Copy FAILURE, %@", [error description]]];
         }
         else
-            [AppDebugLog writeDebugData:[NSString stringWithFormat:@"DA : copyDBtoDocumentDirectory: DB Copy SUCCESS, %@", [error description]]];
+            [[AppDebugLog appDebug] writeDebugData:[NSString stringWithFormat:@"DA : copyDBtoDocumentDirectory: DB Copy SUCCESS, %@", [error description]]];
     }
 }
 
 -(void) replaceDBinDocumentDirectory
 {
     NSError *error;
-	NSFileManager *fileManager = [NSFileManager defaultManager];
+    NSFileManager *fileManager = [NSFileManager defaultManager];
     NSArray *paths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);
-	NSString *documentsDirectory = [paths objectAtIndex:0];
+    NSString *documentsDirectory = [paths objectAtIndex:0];
     NSString *removeDBPath = [documentsDirectory stringByAppendingPathComponent:DB_FILE];
     NSString *renameDBPath = [documentsDirectory stringByAppendingPathComponent:DB_FILEX];
     [[NSFileManager defaultManager] removeItemAtPath:removeDBPath error:&error];
@@ -132,18 +132,19 @@
     
     if(![fileManager fileExistsAtPath:removeDBPath])
     {
-        NSLog(@"DA : replaceDBinDocumentDirectory : FAILED : file = %@", removeDBPath);
-        [AppDebugLog writeDebugData:[NSString stringWithFormat:@"DA : replaceDBinDocumentDirectory: DB Copy FAILURE, %@", [error description]]];
+        NELog(@"DA : replaceDBinDocumentDirectory : FAILED : file = %@", removeDBPath);
+        [[AppDebugLog appDebug] writeDebugData:[NSString stringWithFormat:@"DA : replaceDBinDocumentDirectory: DB Copy FAILURE, %@", [error description]]];
     }
     else
-        [AppDebugLog writeDebugData:[NSString stringWithFormat:@"DA : replaceDBinDocumentDirectory: DB Copy SUCCESS, %@", [error description]]];
+        [[AppDebugLog appDebug] writeDebugData:[NSString stringWithFormat:@"DA : replaceDBinDocumentDirectory: DB Copy SUCCESS, %@", [error description]]];
     
 }
 
 -(void) closeConnection
 {
+    NSDBLog(@"DA : sqlite3dbConn : CLOSED");
     sqlite3_close(sqlite3dbConn);
-    sqlite3dbConn = NO;
+    sqlite3dbConn = nil;
 }
 
 -(void) killDB
@@ -160,28 +161,76 @@
         
         if ([fileMgr removeItemAtPath:dbfile error:&error] != YES)
         {
-            NSLog(@"DA : Path to file: %@", dbfile);
-            NSLog(@"DA : Is deletable file at path: %d", [fileMgr isDeletableFileAtPath:dbfile]);
-            NSLog(@"DA : Unable to delete file: %@", [error localizedDescription]);
-            [AppDebugLog writeDebugData:[NSString stringWithFormat:@"DA : killDB : DB delete FAILURE, %@", [error description]]];
+            NELog(@"DA : Path to file: %@", dbfile);
+            NELog(@"DA : Is deletable file at path: %d", [fileMgr isDeletableFileAtPath:dbfile]);
+            NELog(@"DA : Unable to delete file: %@", [error localizedDescription]);
+            [[AppDebugLog appDebug] writeDebugData:[NSString stringWithFormat:@"DA : killDB : DB delete FAILURE, %@", [error description]]];
         }
         else
         {
             NSDBLog(@"DA : File was deleted %@", dbfile);
-            [AppDebugLog writeDebugData:[NSString stringWithFormat:@"DA : killDB : DB delete SUCCESS, %@", [error description]]];
+            [[AppDebugLog appDebug] writeDebugData:[NSString stringWithFormat:@"DA : killDB : DB delete SUCCESS, %@", [error description]]];
         }
     }
 }
 
--(BOOL) openConnection
+-(BOOL) openLibraryConnection:(NSString*)dbFile
 {
     if(sqlite3dbConn)
         return true;
     
-    //If we killDB we might have a DataAccess currently in progress so we need to effectively kill it
-    //by checking this, and let the App die
-    if(![SettingsModel getLoginState])
+    NSString* dbfile = [AppManager ReturnPathForLibraryFileWithName:dbFile];
+    BOOL doesDBFileExist = [AppManager DoesLibraryFileExistWithName:dbFile];
+    NSDBLog(@"DA : doesDBFileExist = %@",doesDBFileExist?@"YES":@"NO");
+    
+    conn_pointer = (sqlite3_open([dbfile UTF8String], &sqlite3dbConn) == SQLITE_OK);
+    
+    if(!doesDBFileExist)
+    {
+        NSDBLog(@"DA : openLibraryConnection : ERROR no DBFile ");
+        return false;
+    }
+    
+    if(!conn_pointer)
+    {
+        NELog(@"DA : Error code opening the Library database");
+        NSString *errCode = [NSString stringWithFormat:@"%d",sqlite3_errcode(sqlite3dbConn)];
+        NSString *codeStr = [NSString stringWithFormat:@"%s",sqlite3_errmsg(sqlite3dbConn)];
+        NSString *query = @"NA";
+        [[AppDebugLog appDebug] writeDebugData:[NSString stringWithFormat:@"DA:OpenConnection: %@ %@ ",errCode,codeStr]];
+        [self logError:errCode WithDescription:codeStr andQuery:query andMethod:@"DataAccess:OpenConnection:Library"];
+        return false;
+    }
+    else
+    {
+        [[AppDebugLog appDebug] writeDebugData:[NSString stringWithFormat:@"DA:OpenConnection: Old DB Opened "]];
         return true;
+    }
+}
+
+-(BOOL)isDBOpened
+{
+    BOOL status = NO;
+    if(sqlite3dbConn)
+        status = YES;
+    
+    return status;
+}
+
+-(BOOL) openConnection
+{
+    //
+    //Can only execute this once and apply the encryption key
+    //
+    if(sqlite3dbConn)
+    {
+        NSDBLog(@"DA : sqlite3dbConn : OPENED");
+        return true;
+    }
+    else
+    {
+        NSDBLog(@"DA : sqlite3dbConn : OPENING DB (initialization)");
+    }
     
     NSString* dbfile = [AppManager PathForFileWithName:DB_FILE];
     BOOL doesDBFileExist = [AppManager DoesFileExistWithName:DB_FILE];
@@ -195,104 +244,149 @@
         conn_pointer = (sqlite3_open([dbfile UTF8String], &sqlite3dbConn) == SQLITE_OK);
         if(!conn_pointer)
         {
-            NSDBLog(@"DA : Error code coping the database");
+            NSDBLog(@"DA : Error code copying the database");
             NSString *errCode = [NSString stringWithFormat:@"%d",sqlite3_errcode(sqlite3dbConn)];
             NSString *codeStr = [NSString stringWithFormat:@"%s",sqlite3_errmsg(sqlite3dbConn)];
             NSString *query = @"NA";
-            [AppDebugLog writeDebugData:[NSString stringWithFormat:@"DA:OpenConnection: %@ %@ ",errCode,codeStr]];
+            [[AppDebugLog appDebug] writeDebugData:[NSString stringWithFormat:@"DA:OpenConnection: %@ %@ ",errCode,codeStr]];
             [self logError:errCode WithDescription:codeStr andQuery:query andMethod:@"DataAccess:OpenConnection"];
+            [self closeConnection];
             return false;
         }
         else
         {
             if(sqlLiteVersion >= SQLITE_CIPHER_VERSION)
             {
-                //Default DB template is never encrypted so convert it
-                [self convertDBtoCipher];
+                BOOL isDBEncrypted = [SettingsModel getDBIsEncrypted];
+                BOOL canEncrypt = [SettingsModel getDBCanEncrypt];
+                NSDBLog(@"DA : canEncrypt = %@",canEncrypt?@"YES":@"NO");
+                if(!isDBEncrypted && canEncrypt)
+                {
+                    NSDBLog(@"DA : convertDBtoCipher");
+                    //Default DB template is never encrypted so convert it
+                    [SettingsModel setStartDateTimeStamp:[AppManager UTCDateTime] forIndex:125];
+                    [self convertDBtoCipher];
+                    [SettingsModel setFinishDateTimeStamp:[AppManager UTCDateTime] forIndex:125];
+                    NSDBLog(@"DA : convertDBtoCipher : DB Encrypted time = %f secs",[SettingsModel getStartToFinishTimeForIndex:125]);
+                }
             }
         }
     }
+    else
+        conn_pointer = (sqlite3_open([dbfile UTF8String], &sqlite3dbConn) == SQLITE_OK);
     
-    conn_pointer = (sqlite3_open([dbfile UTF8String], &sqlite3dbConn) == SQLITE_OK);
     if(!conn_pointer)
     {
-    	NSLog(@"DA : Error code opening the database");
+        NELog(@"DA : Error code opening the database");
         NSString *errCode = [NSString stringWithFormat:@"%d",sqlite3_errcode(sqlite3dbConn)];
         NSString *codeStr = [NSString stringWithFormat:@"%s",sqlite3_errmsg(sqlite3dbConn)];
         NSString *query = @"NA";
-        [AppDebugLog writeDebugData:[NSString stringWithFormat:@"DA:OpenConnection: %@ %@ ",errCode,codeStr]];
+        [[AppDebugLog appDebug] writeDebugData:[NSString stringWithFormat:@"DA:OpenConnection: %@ %@ ",errCode,codeStr]];
         [self logError:errCode WithDescription:codeStr andQuery:query andMethod:@"DataAccess:OpenConnection"];
-		return false;
-	}
-	else
-	{
-        NSDBLog(@"DA : Application Connection opened : sqlLiteVersion = %d",sqlLiteVersion);
+        [self closeConnection];
+        return false;
+    }
+    else
+    {
+        NELog(@"DA : Application Connection opened : SQLLite Version = %d",sqlLiteVersion);
         if(sqlLiteVersion >= SQLITE_CIPHER_VERSION)
         {
 #ifdef SQLITE_HAS_CODEC
-            //If it's the 1st client the user needs some dummy pw
-            [self createPass];
             BOOL gotNew = [SettingsModel getGotNewOne];
             if(gotNew)
             {
                 NSDBLog(@"DA : Need to do something special");
-//ENCRYPT is on for Release or Production. If use this you need SQLCipher
-//#define ENCRYPT
+                //ENCRYPT is on for Release or Production. If use this you need SQLCipher
 #ifdef ENCRYPT
                 //Open 1st with old one, then reapply with new one
+                //This is where we rekey the cipher if we get a new one
                 //Only run encryption if we have ENCRYPT
-                sqlite3_key(sqlite3dbConn,[self getPass1],strlen([self getPass1]));
-                NSString *sql = [NSString stringWithFormat:@"PRAGMA cipher = 'aes-64-cfb';"];
+                sqlite3_key(sqlite3dbConn,[self getDBPass1],(int)strlen([self getDBPass1]));
+                NSString *sql = [NSString stringWithFormat:@"PRAGMA cipher = 'aes-256-cfb';"];
                 sqlite3_exec(sqlite3dbConn, (const char*)[sql UTF8String], NULL, NULL, NULL);
                 NSDBLog(@"DA : ENCRYPT REKEY #1 : sqlErrCode = %d : sqlErrMsg = %s",sqlite3_errcode(sqlite3dbConn),sqlite3_errmsg(sqlite3dbConn));
-                sqlite3_rekey(sqlite3dbConn,[self getPass0],strlen([self getPass0]));
+                sqlite3_rekey(sqlite3dbConn,[self getDBPass0],(int)strlen([self getDBPass0]));
                 sqlite3_exec(sqlite3dbConn, (const char*)[sql UTF8String], NULL, NULL, NULL);
                 NSDBLog(@"DA : ENCRYPT REKEY #2 : sqlErrCode = %d : sqlErrMsg = %s",sqlite3_errcode(sqlite3dbConn),sqlite3_errmsg(sqlite3dbConn));
 #endif
                 [SettingsModel setGotNewOne:NO];
-                [AppDebugLog writeDebugData:[NSString stringWithFormat:@"DA:OpenConnection: ReKeying DB "]];
+                [[AppDebugLog appDebug] writeDebugData:[NSString stringWithFormat:@"DA:OpenConnection: ReKeying DB "]];
             }
             else
             {
+#ifdef ENCRYPT
                 //Check DB Encrypted BOOL, if NO DB was never encrypted so convert it
                 //Otherwise just open it properly
-                BOOL isDBEncrypted = [SettingsModel getIsDBEncrypted];
-                if(!isDBEncrypted)
+                BOOL isDBEncrypted = [SettingsModel getDBIsEncrypted];
+                BOOL canEncrypt = [SettingsModel getDBCanEncrypt];
+                NSDBLog(@"DA : ENCRYPT : canEncrypt = %@ :  isDBEncrypted = %@",canEncrypt?@"YES":@"NO",isDBEncrypted?@"YES":@"NO");
+                
+                if(!isDBEncrypted && canEncrypt)
+                {
+                    NSDBLog(@"DA : convertDBtoCipher : connection opened");
                     [self convertDBtoCipher];
+                }
                 
-#ifdef ENCRYPT
-                //Only run encryption if we have ENCRYPT
-                sqlite3_key(sqlite3dbConn,[self getPass0],strlen([self getPass0]));
-                NSString *sql = [NSString stringWithFormat:@"PRAGMA cipher = 'aes-64-cfb';"];
-                sqlite3_exec(sqlite3dbConn, (const char*)[sql UTF8String], NULL, NULL, NULL);
-                NSDBLog(@"DA : ENCRYPT : sqlErrCode = %d : sqlErrMsg = %s",sqlite3_errcode(sqlite3dbConn),sqlite3_errmsg(sqlite3dbConn));
-                
+                if (canEncrypt)
+                {
+                    //Only run encryption if we have ENCRYPT
+                    //Got an encrypted DB so open it with the key
+                    NSDBLog(@"DA : ENCRYPT : applying KEY");
+                    sqlite3_key(sqlite3dbConn,[self getDBPass0],(int)strlen([self getDBPass0]));
+                    NSString *sql = [NSString stringWithFormat:@"PRAGMA cipher = 'aes-256-cfb';"];
+                    sqlite3_exec(sqlite3dbConn, (const char*)[sql UTF8String], NULL, NULL, NULL);
+                    NSDBLog(@"DA : ENCRYPT : sqlErrCode = %d : sqlErrMsg = %s",sqlite3_errcode(sqlite3dbConn),sqlite3_errmsg(sqlite3dbConn));
+                }
 #endif
                 //If you have an encrypted DB and want to convert it back to plain use this
                 //[self convertDBtoPlain];
             }
 #endif
-            NSDBLog(@"DA : Application Connection opened : Running Encrypted");
-            [AppDebugLog writeDebugData:[NSString stringWithFormat:@"DA:OpenConnection: Running Encrypted"]];
+            
+#ifdef ENCRYPT
+            BOOL canEncrypt = [SettingsModel getDBCanEncrypt];
+            if(canEncrypt)
+            {
+                NSMutableArray *dataArray = [self GetRecordsForQuery:@"PRAGMA cipher_version; ",nil];
+                if([dataArray count] > 0)
+                {
+                    NSString *version = [[dataArray objectAtIndex:0] objectForKey:@"cipher_version"];
+                    NELog(@"DA : Application Connection opened : SQLCipher Version = %@",version);
+                }
+                
+                NSDBLog(@"DA : Application Connection opened : Running Encrypted");
+                [[AppDebugLog appDebug] writeDebugData:[NSString stringWithFormat:@"DA:OpenConnection: Running Encrypted"]];
+            }
+            else
+            {
+                NSDBLog(@"DA : Application Connection opened : Running Unencrypted");
+                [[AppDebugLog appDebug] writeDebugData:[NSString stringWithFormat:@"DA:OpenConnection: Running Unencrypted"]];
+            }
+#else
+            NSDBLog(@"DA : Application Connection opened : Running Unencrypted");
+            [[AppDebugLog appDebug] writeDebugData:[NSString stringWithFormat:@"DA:OpenConnection: Running Unencrypted"]];
+#endif
         }
         else
         {
             NSDBLog(@"DA : Application Connection opened : Running Unencrypted");
-            [AppDebugLog writeDebugData:[NSString stringWithFormat:@"DA:OpenConnection: Running Unencrypted"]];
+            [[AppDebugLog appDebug] writeDebugData:[NSString stringWithFormat:@"DA:OpenConnection: Running Unencrypted"]];
         }
         
+        BOOL status = NO;
         if (sqlite3_exec(sqlite3dbConn, (const char*) "SELECT count(*) FROM AppInfo;", NULL, NULL, NULL) == SQLITE_OK)
         {
             if(sqlLiteVersion >= SQLITE_CIPHER_VERSION)
             {
-                NSDBLog(@"DA : Primary DB Encryption connection opened.");
-                [AppDebugLog writeDebugData:[NSString stringWithFormat:@"Primary DB Encryption connection opened."]];
+                NSDBLog(@"DA : Primary DB connection opened SQLCipher.");
+                [[AppDebugLog appDebug] writeDebugData:[NSString stringWithFormat:@"Primary DB connection opened SQLCipher."]];
             }
             else
             {
-                NSDBLog(@"DA : Primary DB connection opened.");
-                [AppDebugLog writeDebugData:[NSString stringWithFormat:@"Primary DB connection opened."]];
+                NSDBLog(@"DA : Primary DB connection opened Regular SQL.");
+                [[AppDebugLog appDebug] writeDebugData:[NSString stringWithFormat:@"Primary DB connection opened Regular SQL."]];
             }
+            status = YES;
             //If we're upgrading an Old Client of version 1.2 then SQLCipher DB needs to be upgraded
             double dbVersion = [self getDBVersion];
             [self upgradeDB:dbVersion];
@@ -301,49 +395,53 @@
         {
             if(sqlLiteVersion >= SQLITE_CIPHER_VERSION)
             {
-                NSLog(@"DA : Primary DB Open Encryption FAILURE.");
-                [AppDebugLog writeDebugData:[NSString stringWithFormat:@"Primary DB Open Encryption FAILURE."]];
+                NELog(@"DA : Primary DB Open Encryption FAILURE.");
+                [SettingsModel setLoginState:NO];
+                [[AppDebugLog appDebug] writeDebugData:[NSString stringWithFormat:@"Primary DB Open Encryption FAILURE."]];
             }
             else
             {
-                NSLog(@"DA : Primary DB Open FAILURE.");
-                [AppDebugLog writeDebugData:[NSString stringWithFormat:@"Primary DB Open FAILURE."]];
+                NELog(@"DA : Primary DB Open FAILURE.");
+                [SettingsModel setLoginState:NO];
+                [[AppDebugLog appDebug] writeDebugData:[NSString stringWithFormat:@"Primary DB Open FAILURE."]];
             }
+            status = NO;
+            [self closeConnection];
         }
-		return true;
+        return status;
     }
 }
 
--(const char*)getPass0
+-(const char*)getDBPass0
 {
-    NSString *some0 = [SettingsModel getPW0];
-    NSString *ds0 = [SettingsModel getDS0];
-    const char *ss = [[NSString stringWithFormat:@"%@sh345%@54rt%@5tfh",ds0,DB_KEY,some0] UTF8String];
+    NSString *some0 = [SettingsModel getDBPW0];
+    NSString *ds0 = [SettingsModel getDBDS0];
+    const char *ss = [[NSString stringWithFormat:@"sh%@739%@23rt%@5txy",ds0,DB_KEY,some0] UTF8String];
 #ifdef DEV
     NSDBLog(@"DA : %s ",ss);
 #endif
     return ss;
 }
 
--(const char*)getPass1
+-(const char*)getDBPass1
 {
-    NSString *some1 = [SettingsModel getPW1];
-    NSString *ds1 = [SettingsModel getDS1];
-    const char *ss = [[NSString stringWithFormat:@"%@sh345%@54rt%@5tfh",ds1,DB_KEY,some1] UTF8String];
+    NSString *some1 = [SettingsModel getDBPW1];
+    NSString *ds1 = [SettingsModel getDBDS1];
+    const char *ss = [[NSString stringWithFormat:@"sh%@739%@23rt%@5txy",ds1,DB_KEY,some1] UTF8String];
     return ss;
 }
 
 -(void)createPass
 {
-    NSString *some0 = [SettingsModel getPW0];
+    NSString *some0 = [SettingsModel getDBPW0];
     if([some0 length] == 0)
     {
         //User never had a proper password so create a random one for them. They can change this later.
         //Here we just do this, and then let SQLCipher encrypt the DB with this.
         //We also need to add the modificationDate to UserContacts
-        [SettingsModel setPW0:@"1260793RTgu"];
-        [SettingsModel setDS0:[AppManager getSomeDSfromDate:[NSDate date]]];
-        [AppDebugLog writeDebugData:[NSString stringWithFormat:@"DA:OpenConnection: Creating Dummy "]];
+        [SettingsModel setDBPW0:@"1260793RTgu"];
+        [SettingsModel setDBDS0:[AppManager getSomeDSfromDate:[NSDate date]]];
+        [[AppDebugLog appDebug] writeDebugData:[NSString stringWithFormat:@"DA:OpenConnection: Creating Dummy "]];
     }
 }
 
@@ -356,7 +454,7 @@
     //DB_FILEX to DB_FILE
     [self copyDBtoDocumentDirectory:DB_FILE toDB:DB_FILEX];
     NSString *dbfileX = [AppManager PathForFileWithName:DB_FILEX];
-    NSString *sql = [NSString stringWithFormat:@"attach database '%@' as encrypted KEY '%s';",dbfileX,[self getPass0]];
+    NSString *sql = [NSString stringWithFormat:@"attach database '%@' as encrypted KEY '%s';",dbfileX,[self getDBPass0]];
     sqlite3_exec(sqlite3dbConn, (const char*)[sql UTF8String], NULL, NULL, NULL);
     NSDBLog(@"DA : convertDBtoCipher : sqlErrCode = %d : sqlErrMsg = %s",sqlite3_errcode(sqlite3dbConn),sqlite3_errmsg(sqlite3dbConn));
     sql = [NSString stringWithFormat:@"select sqlcipher_export('encrypted');"];
@@ -366,8 +464,8 @@
     sqlite3_exec(sqlite3dbConn, (const char*)[sql UTF8String], NULL, NULL, NULL);
     NSDBLog(@"DA : convertDBtoCipher : sqlErrCode = %d : sqlErrMsg = %s",sqlite3_errcode(sqlite3dbConn),sqlite3_errmsg(sqlite3dbConn));
     [self replaceDBinDocumentDirectory];
-    NSDBLog(@"DA :convertDBtoCipher : DB is ENCRYPTED ");
-    [SettingsModel setIsDBEncrypted:YES];
+    NSDBLog(@"DA : convertDBtoCipher : DB is ENCRYPTED ");
+    [SettingsModel setDBIsEncrypted:YES];
     NSString *dbfile = [AppManager PathForFileWithName:DB_FILE];
     conn_pointer = (sqlite3_open([dbfile UTF8String], &sqlite3dbConn) == SQLITE_OK);
 #endif
@@ -391,7 +489,7 @@
     NSDBLog(@"DA : convertDBtoCipher: sqlErrCode = %d : sqlErrMsg = %s",sqlite3_errcode(sqlite3dbConn),sqlite3_errmsg(sqlite3dbConn));
     [self replaceDBinDocumentDirectory];
     NSDBLog(@"DA :convertDBtoPlain : DB is UNENCRYPTED ");
-    [SettingsModel setIsDBEncrypted:NO];
+    [SettingsModel setDBIsEncrypted:NO];
     NSString *dbfile = [AppManager PathForFileWithName:DB_FILE];
     conn_pointer = (sqlite3_open([dbfile UTF8String], &sqlite3dbConn) == SQLITE_OK);
 }
@@ -405,13 +503,19 @@
     [sql appendString:@"select name,value,descrip from AppInfo"];
     NSMutableArray *resultsArray = [[AppManager DataAccess] GetRecordsForQuery:sql WithParameters:parameters];
     NSDBLog(@"DA : getDBVersion : results = %@",resultsArray);
+    BOOL isDBEncrypted = [SettingsModel getDBIsEncrypted];
+    
     if([resultsArray count] == 0)
     {
         NSMutableString *sql = [NSMutableString string];
         NSMutableArray *parameters = [NSMutableArray array];
         [parameters addObject:@"App"];
         [parameters addObject:@"1.1"];
-        [parameters addObject:@"unencrypted"];
+        if(isDBEncrypted)
+            [parameters addObject:@"encrypted"];
+        else
+            [parameters addObject:@"unencrypted"];
+        
         [sql appendString:@"insert into AppInfo (name,value,descrip) values(?,?,?) "];
         BOOL status = [[AppManager DataAccess] ExecuteStatement:sql WithParameters:parameters];
         NSDBLog(@"DA : getDBVersion : status = %@",status?@"YES":@"NO");
@@ -445,7 +549,7 @@
         //Were at the proper DB level, new DB alter table SQL would go here for the specific version
         status = YES;
     }
-    [AppDebugLog writeDebugData:[NSString stringWithFormat:@"DA : upgradeDB : version = %f",dbVersion]];
+    [[AppDebugLog appDebug] writeDebugData:[NSString stringWithFormat:@"DA : upgradeDB : version = %f",dbVersion]];
     NSDBLog(@"DA : upgradeDB : dbVersion = %f : status = %@",dbVersion,status?@"YES":@"NO");
     return status;
 }
@@ -467,103 +571,119 @@
 
 -(sqlite3_stmt*) stmt:(sqlite3_stmt*)ps FromQuery:(NSString*)query WithParameters:(NSMutableArray*) parameters
 {
-	if (!sqlite3dbConn)
-	{
-		[self openConnection];
-	}
+    if (!sqlite3dbConn)
+    {
+        return nil;
+    }
     
-    int code = sqlite3_prepare_v2(sqlite3dbConn, [query UTF8String], [query lengthOfBytesUsingEncoding:NSUTF8StringEncoding], &ps, NULL);
+    int code = sqlite3_prepare_v2(sqlite3dbConn, [query UTF8String], (int)[query lengthOfBytesUsingEncoding:NSUTF8StringEncoding], &ps, NULL);
     
-	if(code == SQLITE_OK)
-	{
-		for(int i = 0;i < [parameters count]; i++)
-		{
-			NDLog(@"DA :  %@ isKindOfClass %@",[parameters objectAtIndex:i], [[parameters objectAtIndex:i] class]);
-			if([[parameters objectAtIndex:i] isKindOfClass:[NSNumber class]])
-			{
-				NSString *objcType = [NSString stringWithUTF8String:[[parameters objectAtIndex:i] objCType]];
-				if ([objcType isEqualToString:@"f"])
-				{
-					NDLog(@"DA :  SetParameterFloat %@",[parameters objectAtIndex:i]);
-	                sqlite3_bind_double(ps, i+1, [[parameters objectAtIndex:i] floatValue]);
-				}
-				else
-				{
-					//All others treated as Int's
-					NDLog(@"DA : Default SetParameterInt %@",[parameters objectAtIndex:i]);
-	                sqlite3_bind_int(ps, i+1, [[parameters objectAtIndex:i] intValue]);
-				}
-			}
-			else if([[parameters objectAtIndex:i] isKindOfClass:[NSString class]])
-			{
-	            sqlite3_bind_text(ps, i + 1, [[parameters objectAtIndex:i]  UTF8String], -1, SQLITE_TRANSIENT);
-				NDLog(@"DA :  SetParameterString %@",[parameters objectAtIndex:i]);
-			}
-			else if([[parameters objectAtIndex:i] isKindOfClass:[UTCDate class]])
-			{
-                NSString *utcdatetime = [AppManager UTCDateTime];
-	            sqlite3_bind_text(ps, i + 1, [utcdatetime  UTF8String], -1, SQLITE_TRANSIENT);
-                NDLog(@"DA :  SetParameterDate");
-			}
-			else if([[parameters objectAtIndex:i] isKindOfClass:[AppQueryParameter class]])
+    if(code == SQLITE_OK)
+    {
+        for(int i = 0;i < [parameters count]; i++)
+        {
+            NSQLog(@"DA :  %@ isKindOfClass %@",[parameters objectAtIndex:i], [[parameters objectAtIndex:i] class]);
+            if([[parameters objectAtIndex:i] isKindOfClass:[NSNumber class]])
             {
-				AppQueryParameter *parameter = [parameters objectAtIndex:i];
-				if ([parameter.parameterType intValue]== GET_LAST_INSERTED_IDENTITY)
+                NSString *objcType = [NSString stringWithUTF8String:[[parameters objectAtIndex:i] objCType]];
+                NSQLog(@"DA : DataAccess : objcType = %@",objcType);
+                if ([objcType isEqualToString:@"d"])
                 {
-					NDLog(@"DA :  SetParameterInt %llu", sqlite3_last_insert_rowid(sqlite3dbConn));
-	                sqlite3_bind_int(ps, i+1, (int)sqlite3_last_insert_rowid(sqlite3dbConn));
+                    NSQLog(@"DA : SetParameterDouble %@",[parameters objectAtIndex:i]);
+                    sqlite3_bind_double(ps, i+1, [[parameters objectAtIndex:i] floatValue]);
                 }
-				else if ([parameter.parameterType intValue] == GET_AND_SAVE_LAST_INSERTED_IDENTITY)
+                else if ([objcType isEqualToString:@"q"])
                 {
-					NDLog(@"DA :  SetParameterInt %llu", sqlite3_last_insert_rowid(sqlite3dbConn));
+                    NSQLog(@"DA : SetParameterLongLong %@",[parameters objectAtIndex:i]);
+                    sqlite3_bind_int64(ps, i+1, [[parameters objectAtIndex:i] longLongValue]);
+                }
+                else
+                {
+                    //All others treated as Int's
+                    NSQLog(@"DA : Default SetParameterInt %@",[parameters objectAtIndex:i]);
+                    sqlite3_bind_int(ps, i+1, [[parameters objectAtIndex:i] intValue]);
+                }
+            }
+            else if([[parameters objectAtIndex:i] isKindOfClass:[NSString class]])
+            {
+                sqlite3_bind_text(ps, i + 1, [[parameters objectAtIndex:i]  UTF8String], -1, SQLITE_TRANSIENT);
+                NSQLog(@"DA :  SetParameterString %@",[parameters objectAtIndex:i]);
+            }
+            else if([[parameters objectAtIndex:i] isKindOfClass:[UTCDate class]])
+            {
+                NSString *utcdatetime = [AppManager UTCDateTime];
+                sqlite3_bind_text(ps, i + 1, [utcdatetime  UTF8String], -1, SQLITE_TRANSIENT);
+                NSQLog(@"DA :  SetParameterDate");
+            }
+            else if([[parameters objectAtIndex:i] isKindOfClass:[AppQueryParameter class]])
+            {
+                AppQueryParameter *parameter = [parameters objectAtIndex:i];
+                if ([parameter.parameterType intValue]== GET_LAST_INSERTED_IDENTITY)
+                {
+                    NSQLog(@"DA :  SetParameterInt %llu", sqlite3_last_insert_rowid(sqlite3dbConn));
+                    sqlite3_bind_int(ps, i+1, (int)sqlite3_last_insert_rowid(sqlite3dbConn));
+                }
+                else if ([parameter.parameterType intValue] == GET_AND_SAVE_LAST_INSERTED_IDENTITY)
+                {
+                    NSQLog(@"DA :  SetParameterInt %llu", sqlite3_last_insert_rowid(sqlite3dbConn));
                     sqlite3_bind_int(ps, i+1, (int)sqlite3_last_insert_rowid(sqlite3dbConn));
                     lastInsertedIdentity = (int)sqlite3_last_insert_rowid(sqlite3dbConn);
                 }
                 else if ([parameter.parameterType intValue] == RETRIEVE_SAVED_IDENTITY)
                 {
-	                sqlite3_bind_int(ps, i+1, lastInsertedIdentity);
-					NDLog(@"DA :  SetParameterInt %ld", lastInsertedIdentity);
+                    sqlite3_bind_int(ps, i+1, (int)lastInsertedIdentity);
+                    NSQLog(@"DA :  SetParameterInt %ld", lastInsertedIdentity);
                 }
             }
-			else if([[parameters objectAtIndex:i] isKindOfClass:[NSData class]])
-			{
+            else if([[parameters objectAtIndex:i] isKindOfClass:[NSData class]])
+            {
                 NSData *dataValue = [parameters objectAtIndex:i];
-                sqlite3_bind_blob(ps, i+1, [dataValue bytes], [dataValue length], SQLITE_TRANSIENT);
-			}
-			else
-			{
-				NSLog(@"DA : Error: No match found for Data Type %@",[parameters objectAtIndex:i]);
+                //sqlite3_bind_blob(ps, i+1, [dataValue bytes], (int)[dataValue length], SQLITE_TRANSIENT);
+                sqlite3_bind_blob64(ps, i+1, [dataValue bytes], (int)[dataValue length], SQLITE_STATIC);
+            }
+            else
+            {
+                NELog(@"DA : Error: No match found for Data Type %@",[parameters objectAtIndex:i]);
                 NSString *errCode = @"0";
                 NSString *codeStr = @"Undefined Data Type";
-				[AppDebugLog writeDebugData:[NSString stringWithFormat:@"DataAccess Error: No match found for Data Type %@",[parameters objectAtIndex:i]]];
+                [[AppDebugLog appDebug] writeDebugData:[NSString stringWithFormat:@"DataAccess Error: No match found for Data Type %@",[parameters objectAtIndex:i]]];
                 [self logError:errCode WithDescription:codeStr andQuery:query andMethod:@"DataAccess:Prepared Statement"];
-			}
-		}
-	}
-	return ps;
+            }
+        }
+    }
+    return ps;
 }
 
 -(BOOL) ExecuteStatement:(NSString *)query, ... NS_REQUIRES_NIL_TERMINATION
 {
-    //Note the args list must always be terminted with a nil
-    va_list args;
-    va_start(args, query);
-    NSMutableArray *parameters = [NSMutableArray array];
-    id arg;
-    while ( ( arg = va_arg(args, id) ) != nil)
+    @synchronized(self)
     {
-        [parameters addObject:arg];
+        if (!sqlite3dbConn)
+            return NO;
+        
+        //Note the args list must always be terminted with a nil
+        va_list args;
+        va_start(args, query);
+        NSMutableArray *parameters = [NSMutableArray array];
+        id arg;
+        while ( ( arg = va_arg(args, id) ) != nil)
+        {
+            [parameters addObject:arg];
+        }
+        va_end(args);
+        BOOL status = [self ExecuteStatement:query WithParameters:parameters];
+        return status;
     }
-    va_end(args);
-    BOOL status = [self ExecuteStatement:query WithParameters:parameters];
-    return status;
 }
 
 -(BOOL) ExecuteStatement:(NSString *)query WithParameters:(NSMutableArray*) parameters
 {
-	@synchronized(self)
+    @synchronized(self)
     {
         BOOL status = NO;
+        if (!sqlite3dbConn)
+            return NO;
+        
         sqlite3_stmt *ps = nil;
         int code;
         ps = [self stmt:ps FromQuery:query WithParameters:parameters];
@@ -578,26 +698,29 @@
         {
             NSString *errCode = [NSString stringWithFormat:@"%d",sqlite3_errcode(sqlite3dbConn)];
             NSString *codeStr = [NSString stringWithUTF8String:sqlite3_errmsg(sqlite3dbConn)];
-            NDLog(@"DA : SQL Error during insert : Err[%@] = %@  : Q = %@\n",errCode,codeStr, query);
+            NELog(@"DA : SQL Error during insert : Err[%@] = %@  : Q = %@\n",errCode,codeStr, query);
             if(![errCode isEqualToString:@"19"])
             {
                 //Don't log not unique errors, we get tons of these
-                [AppDebugLog writeDebugData:[NSString stringWithFormat:@"DA:ExecuteStatement:  Err[%@] = %@ :  %@ %@",errCode, codeStr, query, parameters]];
+                [[AppDebugLog appDebug] writeDebugData:[NSString stringWithFormat:@"DA:ExecuteStatement:  Err[%@] = %@ :  %@ %@",errCode, codeStr, query, parameters]];
                 [self logError:errCode WithDescription:codeStr andQuery:query andMethod:@"DataAccess:ExecuteStatement"];
             }
         }
         //This releases the ps
         sqlite3_finalize(ps);
-		sqlite3_exec(sqlite3dbConn, "COMMIT TRANSACTION", 0, 0, 0);
+        sqlite3_exec(sqlite3dbConn, "COMMIT TRANSACTION", 0, 0, 0);
         return status;
     }
 }
 
 -(BOOL) ExecuteStatement:(NSString *)query WithParameters:(NSMutableArray*) parameters OutParameter:(NSString**)errorCodeStr
 {
-	@synchronized(self)
+    @synchronized(self)
     {
         BOOL status = NO;
+        if (!sqlite3dbConn)
+            return NO;
+        
         sqlite3_stmt *ps = nil;
         int code;
         ps = [self stmt:ps FromQuery:query WithParameters:parameters];
@@ -610,16 +733,16 @@
         
         if( !ps || !status )
         {
-            NSLog(@"DA : SQL Error during insert: %s\n", sqlite3_errmsg(sqlite3dbConn));
+            NELog(@"DA : SQL Error during insert: %s\n", sqlite3_errmsg(sqlite3dbConn));
             NSString *errCode = [NSString stringWithFormat:@"%d",sqlite3_errcode(sqlite3dbConn)];
             NSString *codeStr = [NSString stringWithUTF8String:sqlite3_errmsg(sqlite3dbConn)];
-            [AppDebugLog writeDebugData:[NSString stringWithFormat:@"DataAccess:ExecuteStatement:  %@  %@ %@", codeStr,  query, parameters]];
+            [[AppDebugLog appDebug] writeDebugData:[NSString stringWithFormat:@"DataAccess:ExecuteStatement:  %@  %@ %@", codeStr,  query, parameters]];
             //not sure if we should rollback in sqlite3
             [self logError:errCode WithDescription:codeStr andQuery:query andMethod:@"DataAccess:ExecuteStatement:OutParameter"];
             if (!status)
-			{
-				*errorCodeStr = codeStr;
-			}
+            {
+                *errorCodeStr = codeStr;
+            }
             
         }
         //This releases the ps
@@ -631,18 +754,21 @@
 
 -(BOOL) ExecuteTransaction:(NSMutableArray *)sqlAndParamsForTransaction
 {
-	@synchronized(self)
+    @synchronized(self)
     {
-        //NSLog(@"%@", sqlAndParamsForTransaction);
+        //NELog(@"%@", sqlAndParamsForTransaction);
         BOOL status = NO;
-        NDLog(@"DA : ExecuteTransaction : Count = %d", [sqlAndParamsForTransaction count]);
+        if (!sqlite3dbConn)
+            return NO;
+        
+        NSQLog(@"DA : ExecuteTransaction : Count = %d", [sqlAndParamsForTransaction count]);
         sqlite3_exec(sqlite3dbConn, "BEGIN EXCLUSIVE TRANSACTION", 0, 0, 0);
         sqlite3_stmt *ps = nil;
         for (int i = 0; i< [sqlAndParamsForTransaction count]; i++)
         {
             NSString *query = [[sqlAndParamsForTransaction objectAtIndex:i] objectForKey:@"SQL"];
             NSMutableArray *parameters = [[sqlAndParamsForTransaction objectAtIndex:i] objectForKey:@"Parameters"];
-            NDLog(@"DA : ExecuteTransaction[%d] : query = %@\n : parameters = %@\n",i,query,parameters);
+            NSQLog(@"DA : ExecuteTransaction[%d] : query = %@\n : parameters = %@\n",i,query,parameters);
             int code;
             ps = [self stmt:ps FromQuery:query WithParameters:parameters];
             if(ps)
@@ -652,10 +778,10 @@
             }
             if( !ps || !status )
             {
-                NSLog(@"DA : ExecuteTransaction : SQL Error during transaction insert : %s\n", sqlite3_errmsg(sqlite3dbConn));
+                NELog(@"DA : ExecuteTransaction : SQL Error during transaction insert : %s\n", sqlite3_errmsg(sqlite3dbConn));
                 NSString *errCode = [NSString stringWithFormat:@"%d",sqlite3_errcode(sqlite3dbConn)];
                 NSString *codeStr = [NSString stringWithUTF8String:sqlite3_errmsg(sqlite3dbConn)];
-                [AppDebugLog writeDebugData:[NSString stringWithFormat:@"DA:ExecuteTransaction: %@ %@ %@", codeStr, query, parameters]];
+                [[AppDebugLog appDebug] writeDebugData:[NSString stringWithFormat:@"DA:ExecuteTransaction: %@ %@ %@", codeStr, query, parameters]];
                 sqlite3_exec(sqlite3dbConn, "ROLLBACK", 0, 0, 0);
                 [self logError:errCode WithDescription:codeStr andQuery:query andMethod:@"DataAccess:ExecuteTransaction"];
                 status = NO;
@@ -675,23 +801,32 @@
 -(NSMutableArray*)GetRecordsForQuery:(NSString*)query, ... NS_REQUIRES_NIL_TERMINATION
 {
     //Note the args list must always be terminted with a nil
-    va_list args;
-    va_start(args, query);
-    NSMutableArray *parameters = [NSMutableArray array];
-    id arg = nil;
-    while ( ( arg = va_arg(args, id) ) != nil)
+    @synchronized(self)
     {
-        [parameters addObject:arg];
+        if (!sqlite3dbConn)
+            return nil;
+        
+        va_list args;
+        va_start(args, query);
+        NSMutableArray *parameters = [NSMutableArray array];
+        id arg = nil;
+        while ( ( arg = va_arg(args, id) ) != nil)
+        {
+            [parameters addObject:arg];
+        }
+        va_end(args);
+        NSMutableArray *results = [self GetRecordsForQuery:query WithParameters:parameters];
+        return results;
     }
-    va_end(args);
-    NSMutableArray *results = [self GetRecordsForQuery:query WithParameters:parameters];
-    return results;
 }
 
 -(NSMutableArray *) GetRecordsForQuery:(NSString*)query WithParameters:(NSMutableArray*)parameters
 {
-	@synchronized(self)
+    @synchronized(self)
     {
+        if (!sqlite3dbConn)
+            return nil;
+        
         sqlite3_stmt *ps = nil;
         ps = [self stmt:ps FromQuery:query WithParameters:parameters];
         NSMutableArray *results = [[NSMutableArray alloc] init];
@@ -702,7 +837,7 @@
             NSMutableDictionary *result;
             while (sqlite3_step(ps)==SQLITE_ROW)
             {
-                NDLog(@"DA : columnCount = %d", columnCount);
+                NSQLog(@"DA : columnCount = %d", columnCount);
                 int i = 0;
                 result = [[NSMutableDictionary alloc] init];
                 for (; i < columnCount; i++)
@@ -711,8 +846,13 @@
                     switch (columnType)
                     {
                         case SQLITE_INTEGER:
-                            [result setObject:[NSString stringWithFormat:@"%d" ,sqlite3_column_int(ps, i)] forKey:[NSString stringWithUTF8String:sqlite3_column_name(ps, i)]];
+                            [result setObject:[NSString stringWithFormat:@"%lld" ,sqlite3_column_int64(ps, i)] forKey:[NSString stringWithUTF8String:sqlite3_column_name(ps, i)]];
                             break;
+                            /*
+                             case SQLITE_INTEGER:
+                             [result setObject:[NSString stringWithFormat:@"%d" ,sqlite3_column_int(ps, i)] forKey:[NSString stringWithUTF8String:sqlite3_column_name(ps, i)]];
+                             break;
+                             */
                         case SQLITE_FLOAT:
                             [result setObject:[NSString stringWithFormat:@"%f" ,sqlite3_column_double(ps, i)] forKey:[NSString stringWithUTF8String:sqlite3_column_name(ps, i)]];
                             break;
@@ -730,12 +870,12 @@
                             
                         case SQLITE_NULL:
                             //boolean type
-                            NDLog(@"DA : column type %d for column %@ ", columnType, [NSString stringWithUTF8String:sqlite3_column_name(ps, i)]);
+                            NSQLog(@"DA : column type %d for column %@ ", columnType, [NSString stringWithUTF8String:sqlite3_column_name(ps, i)]);
                             [result setObject:@"" forKey:[NSString stringWithUTF8String:sqlite3_column_name(ps, i)]];
                             break;
                             
                         default:
-                            NDLog(@"DA : Invalid column type %d for column %@ ", columnType, [NSString stringWithUTF8String:sqlite3_column_name(ps, i)]);
+                            NSQLog(@"DA : Invalid column type %d for column %@ ", columnType, [NSString stringWithUTF8String:sqlite3_column_name(ps, i)]);
                             break;
                     }
                 }
@@ -744,115 +884,118 @@
         }
         else
         {
-            NSLog(@"DA : SQL Error Prepared Stmt: %s\n", sqlite3_errmsg(sqlite3dbConn));
-            NSLog(@"DA : SQL Error Prepared Stmt: %@\n",query);
+            NELog(@"DA : SQL Error Prepared Stmt: %s\n", sqlite3_errmsg(sqlite3dbConn));
+            NELog(@"DA : SQL Error Prepared Stmt: %@\n",query);
             NSString *errCode = [NSString stringWithFormat:@"%d",sqlite3_errcode(sqlite3dbConn)];
             NSString *codeStr = [NSString stringWithFormat:@"%s",sqlite3_errmsg(sqlite3dbConn)];
-            [AppDebugLog writeDebugData:[NSString stringWithFormat:@"DataAccess:Prepared Statement : %@ : %@",errCode,codeStr]];
+            [[AppDebugLog appDebug] writeDebugData:[NSString stringWithFormat:@"DataAccess:Prepared Statement : %@ : %@",errCode,codeStr]];
             [self logError:errCode WithDescription:codeStr andQuery:query andMethod:@"DataAccess:Prepared Statement"];
         }
         //This releases the ps
         sqlite3_finalize(ps);
-        NSMutableArray *returnedResults = [NSMutableArray arrayWithArray:results];
+        NSMutableArray *returnedResults = [NSMutableArray new];
+        if(results != nil)
+            [returnedResults setArray:results];
+        
         return returnedResults;
     }
 }
 
 - (NSString *)getDatabaseTables
 {
-	NSMutableString *dump = [NSMutableString string];
-	[dump appendFormat:@"\n DataBase Tables for \n\n DB = %@\n\n",DB_FILE];
+    NSMutableString *dump = [NSMutableString string];
+    [dump appendFormat:@"\n DataBase Tables for \n\n DB = %@\n\n",DB_FILE];
     NSMutableString *sql = [NSMutableString string];
     NSMutableArray *parameters = [NSMutableArray array];
     [sql appendString:@"select * from sqlite_master where type='table' and name not like 'sqlite_%';"];
     NSMutableArray *rows = [self GetRecordsForQuery:sql WithParameters:parameters];
     for (int i = 0; i<[rows count]; i++)
     {
-		NSDictionary *obj = [rows objectAtIndex:i];
-		//get sql "create table" sentence
-		NSString *sql = [obj objectForKey:@"sql"];
-		[dump appendString:[NSString stringWithFormat:@"%@;\n",sql]];
+        NSDictionary *obj = [rows objectAtIndex:i];
+        //get sql "create table" sentence
+        NSString *sql = [obj objectForKey:@"sql"];
+        [dump appendString:[NSString stringWithFormat:@"%@;\n",sql]];
     }
     return dump;
 }
 
 - (NSString *)getDatabaseDump
 {
-	NSMutableString *dump = [NSMutableString string];
-	[dump appendFormat:@"\n DataBase Dump for \n\n DB = %@\n\n",DB_FILE];
+    NSMutableString *dump = [NSMutableString string];
+    [dump appendFormat:@"\n DataBase Dump for \n\n DB = %@\n\n",DB_FILE];
     
     NSMutableString *sql = [NSMutableString string];
     NSMutableArray *parameters = [NSMutableArray array];
     [sql appendString:@"select * from sqlite_master where type='table' and name not like 'sqlite_%';"];
     NSMutableArray *rows = [self GetRecordsForQuery:sql WithParameters:parameters];
-	
-	//loop through all tables
-	for (int i = 0; i<[rows count]; i++)
+    
+    //loop through all tables
+    for (int i = 0; i<[rows count]; i++)
     {
-		NSDictionary *obj = [rows objectAtIndex:i];
-		//get sql "create table" sentence
-		NSString *sql = [obj objectForKey:@"sql"];
-		[dump appendString:[NSString stringWithFormat:@"%@;\n",sql]];
-		//get table name
-		NSString *tableName = [obj objectForKey:@"name"];
-		//get all table content
+        NSDictionary *obj = [rows objectAtIndex:i];
+        //get sql "create table" sentence
+        NSString *sql = [obj objectForKey:@"sql"];
+        [dump appendString:[NSString stringWithFormat:@"%@;\n",sql]];
+        //get table name
+        NSString *tableName = [obj objectForKey:@"name"];
+        //get all table content
         NSMutableString *sqls = [NSMutableString string];
         [sqls appendFormat:@"select * from %@",tableName];
         NSMutableArray *tableContent = [self GetRecordsForQuery:sqls WithParameters:parameters];
-		
-		for (int j = 0; j<[tableContent count]; j++)
+        
+        for (int j = 0; j<[tableContent count]; j++)
         {
-			NSDictionary *item = [tableContent objectAtIndex:j];
-			//keys are column names
-			NSArray *keys = [item allKeys];
-			//values are column values
-			NSArray *values = [item allValues];
-			//start constructing insert statement for this item
-			[dump appendString:[NSString stringWithFormat:@"insert into %@ (",tableName]];
-			//loop through all keys (aka column names)
-			NSEnumerator *enumerator = [keys objectEnumerator];
-			id obj;
-			while (obj = [enumerator nextObject])
+            NSDictionary *item = [tableContent objectAtIndex:j];
+            //keys are column names
+            NSArray *keys = [item allKeys];
+            //values are column values
+            NSArray *values = [item allValues];
+            //start constructing insert statement for this item
+            [dump appendString:[NSString stringWithFormat:@"insert into %@ (",tableName]];
+            //loop through all keys (aka column names)
+            NSEnumerator *enumerator = [keys objectEnumerator];
+            id obj;
+            while (obj = [enumerator nextObject])
             {
-				[dump appendString:[NSString stringWithFormat:@"%@,",obj]];
-			}
-			
-			//delete last comma
-			NSRange range;
-			range.length = 1;
-			range.location = [dump length]-1;
-			[dump deleteCharactersInRange:range];
-			[dump appendString:@") values ("];
-			
-			// loop through all values
-			enumerator = [values objectEnumerator];
-			while (obj = [enumerator nextObject])
+                [dump appendString:[NSString stringWithFormat:@"%@,",obj]];
+            }
+            
+            //delete last comma
+            NSRange range;
+            range.length = 1;
+            range.location = [dump length]-1;
+            [dump deleteCharactersInRange:range];
+            [dump appendString:@") values ("];
+            
+            // loop through all values
+            enumerator = [values objectEnumerator];
+            while (obj = [enumerator nextObject])
             {
-				//if it's a number (integer or float)
-				if ([obj isKindOfClass:[NSNumber class]])
+                //if it's a number (integer or float)
+                if ([obj isKindOfClass:[NSNumber class]])
                 {
-					[dump appendString:[NSString stringWithFormat:@"%@,",[obj stringValue]]];
-				}
-				//if it's a null
-				else if ([obj isKindOfClass:[NSNull class]])
+                    [dump appendString:[NSString stringWithFormat:@"%@,",[obj stringValue]]];
+                }
+                //if it's a null
+                else if ([obj isKindOfClass:[NSNull class]])
                 {
-					[dump appendString:@"null,"];
-				}
-				//else is a string
-				else
+                    [dump appendString:@"null,"];
+                }
+                //else is a string
+                else
                 {
-					[dump appendString:[NSString stringWithFormat:@"'%@',",obj]];
-				}
-			}
-			//delete last comma again
-			range.length = 1;
-			range.location = [dump length]-1;
-			[dump deleteCharactersInRange:range];
-			//finish our insert statement
-			[dump appendString:@");\n"];
-		}
-	}
-	return dump;
+                    [dump appendString:[NSString stringWithFormat:@"'%@',",obj]];
+                }
+            }
+            //delete last comma again
+            range.length = 1;
+            range.location = [dump length]-1;
+            [dump deleteCharactersInRange:range];
+            //finish our insert statement
+            [dump appendString:@");\n"];
+        }
+    }
+    return dump;
 }
 
 -(NSString*)getHardwareModel
@@ -864,14 +1007,19 @@
 
 - (NSString *)osVersionBuild
 {
-	int mib[2] = {CTL_KERN, KERN_OSVERSION};
-	size_t size = 0;
-	sysctl(mib, 2, NULL, &size, NULL, 0);
-	char *answer = malloc(size);
-	sysctl(mib, 2, answer, &size, NULL, 0);
-	NSString *results = [NSString stringWithCString:answer encoding: NSUTF8StringEncoding];
-	free(answer);
-	return results;
+    int mib[2] = {CTL_KERN, KERN_OSVERSION};
+    size_t size = 0;
+    sysctl(mib, 2, NULL, &size, NULL, 0);
+    char *answer = malloc(size);
+    int resultInt = sysctl(mib, 2, answer, &size, NULL, 0);
+    NSString *results = @"NA";
+    if(resultInt >= 0)
+        results = [NSString stringWithCString:answer encoding: NSUTF8StringEncoding];
+    
+    if(answer != nil)
+        free(answer);
+    
+    return results;
 }
 
 -(void) logError:(NSString*)errCode WithDescription:(NSString*)codeStr andQuery:(NSString*)query andMethod:(NSString*)methodName
@@ -880,11 +1028,11 @@
     uname(&systemInfo);
     NSString *hardwareModel = [NSString stringWithCString:systemInfo.machine encoding:NSUTF8StringEncoding];
     NSString *osVersion = [NSString stringWithFormat:@"iOS %@ (%@)",[[UIDevice currentDevice] systemVersion],[self osVersionBuild]];
-	NSString *appVersion = [[NSBundle mainBundle] objectForInfoDictionaryKey:@"CFBundleVersion"];
+    NSString *appVersion = [[NSBundle mainBundle] objectForInfoDictionaryKey:@"CFBundleVersion"];
     
     NSMutableString *sql = [NSMutableString string];
-	NSMutableArray *parameters = [NSMutableArray array];
-	[sql appendString:@" insert into ErrorsSQL (sync_bit,sync_delete,sync_datetime, errCode,codeStr,query, methodName,osVersion,appVersion,hardwareModel,buildDate,gitCommit,userEmail,userName) values(?,?,?,?,?,?,?,?,?,?,?,?"];
+    NSMutableArray *parameters = [NSMutableArray array];
+    [sql appendString:@" insert into ErrorsSQL (sync_bit,sync_delete,sync_datetime, errCode,codeStr,query, methodName,osVersion,appVersion,hardwareModel,buildDate,gitCommit,userEmail,userName) values(?,?,?,?,?,?,?,?,?,?,?,?"];
     [parameters addObject:[NSNumber numberWithBool:YES]];
     [parameters addObject:[NSNumber numberWithBool:NO]];
     [parameters addObject:[AppManager UTCDateTime]];
@@ -898,9 +1046,9 @@
     [parameters addObject:[SettingsModel getBuildDate]];
     [parameters addObject:[SettingsModel getGitCommit]];
     
-    if([[SettingsModel getEmailAddress] length] > 1)
+    if([[SettingsModel getUserStrId] length] > 1)
     {
-        [parameters addObject:[SettingsModel getEmailAddress]];
+        [parameters addObject:[SettingsModel getUserStrId]];
         [sql appendString:@",?"];
     }
     else
@@ -908,11 +1056,12 @@
         [sql appendString:@",NULL"];
     }
     
-    if([[SettingsModel getFirstName] length] > 1 && [[SettingsModel getLastName] length] > 1 )
+    if([[SettingsModel getUserStrId] length] > 1)
     {
-        NSString *smugName = [NSString stringWithFormat:@"%@ %@",[SettingsModel getFirstName],[SettingsModel getLastName]];
-        [parameters addObject:smugName];
+        NSString *userName = [NSString stringWithFormat:@"%@",[SettingsModel getUserStrId]];
+        [parameters addObject:userName];
         [sql appendString:@",?)"];
+        
     }
     else
     {
@@ -920,7 +1069,7 @@
     }
     
     NSDictionary *sqlAndParams = [NSDictionary dictionaryWithObjectsAndKeys:sql, @"SQL", parameters, @"Parameters", nil];
-	[[AppManager DataAccess] ExecuteStatement:[sqlAndParams objectForKey:@"SQL"] WithParameters:[sqlAndParams objectForKey:@"Parameters"]];
+    [[AppManager DataAccess] ExecuteStatement:[sqlAndParams objectForKey:@"SQL"] WithParameters:[sqlAndParams objectForKey:@"Parameters"]];
 }
 
 @end

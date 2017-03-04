@@ -10,7 +10,9 @@
 
 @interface AppDebugLog : NSObject
 
-+(void)writeDebugData:(NSString*)debugStr;
++(instancetype)appDebug;
+-(void)writeDebugData:(NSString*)debugStr;
 +(void)createLog;
+-(NSData*)getPDFDebugLog;
 
 @end

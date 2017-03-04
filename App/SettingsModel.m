@@ -95,52 +95,76 @@ __strong static NSDictionary *brandDic;
 	return [prefs objectForKey:@"LastName"];
 }
 
-+(void)setPW0:(NSString*)someStr
++(void)setUserId:(NSNumber*)userId
+{
+    prefs = [NSUserDefaults standardUserDefaults];
+    [prefs setObject:userId forKey:@"UserID"];
+}
+
++(NSNumber*)getUserId
+{
+    prefs = [NSUserDefaults standardUserDefaults];
+    NSNumber *userId = [prefs objectForKey:@"UserID"];
+    if ([userId isKindOfClass:[NSNull class]] || userId == nil)
+        userId = [NSNumber numberWithInt:-1];
+    return userId;
+}
+
++(NSString*)getUserStrId
+{
+    prefs = [NSUserDefaults standardUserDefaults];
+    NSNumber *userId = [prefs objectForKey:@"UserID"];
+    if ([userId isKindOfClass:[NSNull class]] || userId == nil)
+        userId = [NSNumber numberWithInt:-1];
+    return [NSString stringWithFormat:@"%@",userId];
+}
+
++(void)setDBPW0:(NSString*)someStr
 {
     prefs = [NSUserDefaults standardUserDefaults];
 	[prefs setObject:[AppManager AES256Encrypt:someStr] forKey:@"SOMESTR0"];
 }
 
-+(NSString*)getPW0
++(NSString*)getDBPW0
 {
     [[NSUserDefaults standardUserDefaults] synchronize];
 	prefs = [NSUserDefaults standardUserDefaults];
 	return [AppManager AES256Decrypt:[prefs objectForKey:@"SOMESTR0"]];
 }
 
-+(void)setPW1:(NSString*)someStr
++(void)setDBPW1:(NSString*)someStr
 {
     prefs = [NSUserDefaults standardUserDefaults];
 	[prefs setObject:[AppManager AES256Encrypt:someStr] forKey:@"SOMESTR1"];
 }
 
-+(NSString*)getPW1
++(NSString*)getDBPW1
 {
     [[NSUserDefaults standardUserDefaults] synchronize];
 	prefs = [NSUserDefaults standardUserDefaults];
 	return [AppManager AES256Decrypt:[prefs objectForKey:@"SOMESTR1"]];
 }
 
-+(void)setDS0:(NSString*)someStr
++(void)setDBDS0:(NSString*)someStr
 {
     prefs = [NSUserDefaults standardUserDefaults];
 	[prefs setObject:[AppManager AES256Encrypt:someStr] forKey:@"DSSTR0"];
 }
 
-+(NSString*)getDS0
++(NSString*)getDBDS0
 {
     [[NSUserDefaults standardUserDefaults] synchronize];
 	prefs = [NSUserDefaults standardUserDefaults];
 	return [AppManager AES256Decrypt:[prefs objectForKey:@"DSSTR0"]];
 }
 
-+(void)setDS1:(NSString*)someStr
++(void)setDBDS1:(NSString*)someStr
 {
     prefs = [NSUserDefaults standardUserDefaults];
 	[prefs setObject:[AppManager AES256Encrypt:someStr] forKey:@"DSSTR1"];
 }
 
-+(NSString*)getDS1
++(NSString*)getDBDS1
 {
     [[NSUserDefaults standardUserDefaults] synchronize];
 	prefs = [NSUserDefaults standardUserDefaults];
@@ -160,17 +184,30 @@ __strong static NSDictionary *brandDic;
 	return [prefs boolForKey:@"GotNewOne"];
 }
 
-+(void)setIsDBEncrypted:(BOOL)dbEncrpted
++(void)setDBIsEncrypted:(BOOL)dbEncrpted
 {
 	prefs = [NSUserDefaults standardUserDefaults];
 	[prefs setBool:dbEncrpted forKey:@"DBEncrypted"];
 }
 
-+(BOOL)getIsDBEncrypted;
++(BOOL)getDBIsEncrypted;
 {
 	[[NSUserDefaults standardUserDefaults] synchronize];
 	prefs = [NSUserDefaults standardUserDefaults];
 	return [prefs boolForKey:@"DBEncrypted"];
+}
+
++(void)setDBCanEncrypt:(BOOL)dbEncrpted
+{
+    prefs = [NSUserDefaults standardUserDefaults];
+    [prefs setBool:dbEncrpted forKey:@"CanEncrypt"];
+}
+
++(BOOL)getDBCanEncrypt;
+{
+    [[NSUserDefaults standardUserDefaults] synchronize];
+    prefs = [NSUserDefaults standardUserDefaults];
+    return [prefs boolForKey:@"CanEncrypt"];
 }
 
 +(NSString*)getBuildDate

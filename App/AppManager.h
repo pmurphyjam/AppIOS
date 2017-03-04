@@ -40,11 +40,19 @@
 +(NSDate *) getMediumDatefromString:(NSString*)dateStr;
 +(NSString*)getMidNightForDate:(NSDate*)date;
 +(NSString *)getSomeDSfromDate:(NSDate*)date;
++(NSString *)humanShortString:(NSDate*)date;
 +(BOOL)DoesFileExistWithName:(NSString*)fileName;
++(BOOL)DeleteFileWithName:(NSString*)fileName;
++(BOOL)DoesLibraryFileExistWithName:(NSString*)fileName;
++(BOOL)DeleteLibraryFileWithName:(NSString*)fileName;
++(NSString*)ReturnPathForLibraryFileWithName:(NSString*)fileName;
 +(NSMutableData*)AES256Encrypt:(NSString*)plainText;
 +(NSString*)AES256Decrypt:(NSMutableData*)encryptData;
++(NSMutableData*)AES256EncryptDic:(NSDictionary*)plainDic;
++(NSDictionary*)AES256DecryptDic:(NSMutableData*)encryptData;
 +(NSMutableArray*)getCrashData;
 +(BOOL)crashDataExists;
 +(BOOL)updateCrashData:(NSString*)crashID;
++(void)LogoutFromDB;
 
 @end

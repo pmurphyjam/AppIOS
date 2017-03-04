@@ -15,7 +15,9 @@
     int conn_pointer;
 }
 
+-(BOOL)isDBOpened;
 -(BOOL)openConnection;
+-(BOOL)openLibraryConnection:(NSString*)dbFile;
 -(int)currentSizeOfDatabase;
 -(NSMutableArray*)GetRecordsForQuery:(NSString*)query WithParameters:(NSMutableArray*)parameters;
 -(NSMutableArray*)GetRecordsForQuery:(NSString*)query, ... NS_REQUIRES_NIL_TERMINATION;
@@ -27,5 +29,6 @@
 -(void)killDB;
 -(NSString*)getDatabaseTables;
 -(NSString*)getDatabaseDump;
+-(void)createPass;
 
 @end
