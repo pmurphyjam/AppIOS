@@ -145,32 +145,6 @@ __strong static NSDictionary *brandDic;
 	return [AppManager AES256Decrypt:[prefs objectForKey:@"SOMESTR1"]];
 }
 
-+(void)setDBDS0:(NSString*)someStr
-{
-    prefs = [NSUserDefaults standardUserDefaults];
-	[prefs setObject:[AppManager AES256Encrypt:someStr] forKey:@"DSSTR0"];
-}
-
-+(NSString*)getDBDS0
-{
-    [[NSUserDefaults standardUserDefaults] synchronize];
-	prefs = [NSUserDefaults standardUserDefaults];
-	return [AppManager AES256Decrypt:[prefs objectForKey:@"DSSTR0"]];
-}
-
-+(void)setDBDS1:(NSString*)someStr
-{
-    prefs = [NSUserDefaults standardUserDefaults];
-	[prefs setObject:[AppManager AES256Encrypt:someStr] forKey:@"DSSTR1"];
-}
-
-+(NSString*)getDBDS1
-{
-    [[NSUserDefaults standardUserDefaults] synchronize];
-	prefs = [NSUserDefaults standardUserDefaults];
-	return [AppManager AES256Decrypt:[prefs objectForKey:@"DSSTR1"]];
-}
-
 +(void)setGotNewOne:(BOOL)gotNewOne
 {
 	prefs = [NSUserDefaults standardUserDefaults];

@@ -395,15 +395,15 @@
         {
             if(sqlLiteVersion >= SQLITE_CIPHER_VERSION)
             {
-                NELog(@"DA : Primary DB Open Encryption FAILURE.");
+                NELog(@"DA : PRIMARY DB OPEN ENCRYPTION FAILURE!");
                 [SettingsModel setLoginState:NO];
-                [[AppDebugLog appDebug] writeDebugData:[NSString stringWithFormat:@"Primary DB Open Encryption FAILURE."]];
+                [[AppDebugLog appDebug] writeDebugData:[NSString stringWithFormat:@"PRIMARY DB OPEN ENCRYPTION FAILURE!"]];
             }
             else
             {
-                NELog(@"DA : Primary DB Open FAILURE.");
+                NELog(@"DA : PRIMARY DB OPEN FAILURE.");
                 [SettingsModel setLoginState:NO];
-                [[AppDebugLog appDebug] writeDebugData:[NSString stringWithFormat:@"Primary DB Open FAILURE."]];
+                [[AppDebugLog appDebug] writeDebugData:[NSString stringWithFormat:@"PRIMARY DB OPEN FAILURE."]];
             }
             status = NO;
             [self closeConnection];
@@ -415,8 +415,7 @@
 -(const char*)getDBPass0
 {
     NSString *some0 = [SettingsModel getDBPW0];
-    NSString *ds0 = [SettingsModel getDBDS0];
-    const char *ss = [[NSString stringWithFormat:@"sh%@739%@23rt%@5txy",ds0,DB_KEY,some0] UTF8String];
+    const char *ss = [[NSString stringWithFormat:@"ft67s%@58uy%@fge4",DB_KEY,some0] UTF8String];
 #ifdef DEV
     NSDBLog(@"DA : %s ",ss);
 #endif
@@ -426,8 +425,7 @@
 -(const char*)getDBPass1
 {
     NSString *some1 = [SettingsModel getDBPW1];
-    NSString *ds1 = [SettingsModel getDBDS1];
-    const char *ss = [[NSString stringWithFormat:@"sh%@739%@23rt%@5txy",ds1,DB_KEY,some1] UTF8String];
+    const char *ss = [[NSString stringWithFormat:@"ft67s%@58uy%@fge4",DB_KEY,some1] UTF8String];
     return ss;
 }
 
@@ -440,7 +438,6 @@
         //Here we just do this, and then let SQLCipher encrypt the DB with this.
         //We also need to add the modificationDate to UserContacts
         [SettingsModel setDBPW0:@"1260793RTgu"];
-        [SettingsModel setDBDS0:[AppManager getSomeDSfromDate:[NSDate date]]];
         [[AppDebugLog appDebug] writeDebugData:[NSString stringWithFormat:@"DA:OpenConnection: Creating Dummy "]];
     }
 }

@@ -30,17 +30,10 @@
 +(NSString*)getDBPW0;
 +(void)setDBPW1:(NSString*)someStr;
 +(NSString*)getDBPW1;
-+(void)setDBDS0:(NSString*)someStr;
-+(NSString*)getDBDS0;
-+(void)setDBDS1:(NSString*)someStr;
-+(NSString*)getDBDS1;
 +(void)setDBIsEncrypted:(BOOL)dbEncrpted;
 +(BOOL)getDBIsEncrypted;
-
 +(void)setDBCanEncrypt:(BOOL)dbEncrpted;
 +(BOOL)getDBCanEncrypt;
-
-
 +(NSString*)getBuildDate;
 +(NSString*)getGitCommit;
 +(void)setLoginState:(BOOL)loginState;
